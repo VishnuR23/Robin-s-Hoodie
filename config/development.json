@@ -1,0 +1,38 @@
+{
+    "market_data": {
+        "providers": {
+            "alpha_vantage": {
+                "base_url": "https://www.alphavantage.co/query",
+                "rate_limit_calls_per_minute": 5
+            },
+            "polygon": {
+                "base_url": "https://api.polygon.io",
+                "rate_limit_calls_per_minute": 5
+            }
+        },
+        "cache_size_mb": 256,
+        "websocket_reconnect_interval": 5
+    },
+    "trading_engine": {
+        "max_positions": 10,
+        "default_position_size": 0.02,
+        "risk_free_rate": 0.02,
+        "max_drawdown": 0.15
+    },
+    "sentiment_analysis": {
+        "news_sources": ["reuters", "bloomberg", "cnbc"],
+        "social_platforms": ["twitter", "reddit"],
+        "sentiment_threshold": 0.6,
+        "batch_size": 100
+    },
+    "api": {
+        "host": "localhost",
+        "port": 8000,
+        "debug": true,
+        "cors_origins": ["http://localhost:3000", "http://127.0.0.1:8080"]
+    },
+    "database": {
+        "redis_url": "redis://localhost:6379/0",
+        "postgres_url": "postgresql://user:password@localhost:5432/trading_db"
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "alpha_vantage": {
+        "api_key": "YOUR_ALPHA_VANTAGE_KEY_HERE"
+    },
+    "polygon": {
+        "api_key": "YOUR_POLYGON_KEY_HERE"  
+    },
+    "twitter": {
+        "bearer_token": "YOUR_TWITTER_BEARER_TOKEN",
+        "api_key": "YOUR_TWITTER_API_KEY",
+        "api_secret": "YOUR_TWITTER_API_SECRET"
+    },
+    "reddit": {
+        "client_id": "YOUR_REDDIT_CLIENT_ID",
+        "client_secret": "YOUR_REDDIT_CLIENT_SECRET",
+        "user_agent": "TradingBot/1.0"
+    },
+    "news_api": {
+        "api_key": "YOUR_NEWS_API_KEY"
+    },
+    "openai": {
+        "api_key": "YOUR_OPENAI_API_KEY"
+    }
+}

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: trading_db
+      POSTGRES_USER: trading_user
+      POSTGRES_PASSWORD: trading_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
+  cpp-backend:
+    build:
+      context: ./cpp
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - CONFIG_FILE=/app/config/development.json
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      
+  python-engine:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - postgres
+      - cpp-backend
+    environment:
+      - CONFIG_FILE=/app/config/development.json
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./logs:/app/logs
+      
+volumes:
+  redis_data:
+  postgres_data:
