@@ -1,57 +1,265 @@
 version: '3.8'
 
 services:
+  # Redis for caching and message queues
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
-    
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - trading-network
+
+  # PostgreSQL for persistent data
   postgres:
     image: postgres:15-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: trading_db
-      POSTGRES_USER: trading_user
-      POSTGRES_PASSWORD: trading_password
+      POSTGRES_DB: ${POSTGRES_DB:-trading_db}
+      POSTGRES_USER: ${POSTGRES_USER:-trading_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_here}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trading_user} -d ${POSTGRES_DB:-trading_db}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - trading-network
+
+  # C++ Market Data Engine
   cpp-backend:
     build:
       context: ./cpp
       dockerfile: Dockerfile
-    ports:
-      - "8001:8001"
+    restart: unless-stopped
     depends_on:
-      - redis
-      - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
-      - CONFIG_FILE=/app/config/development.json
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-trading_db}
+      - LOG_LEVEL=INFO
     volumes:
-      - ./config:/app/config
+      - ./config:/app/config:ro
       - ./logs:/app/logs
-      
+      - ./data:/app/data
+    networks:
+      - trading-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Python ML Trading Engine
   python-engine:
     build:
       context: ./python
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
       - "8000:8000"
     depends_on:
-      - redis
-      - postgres
-      - cpp-backend
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      cpp-backend:
+        condition: service_started
     environment:
-      - CONFIG_FILE=/app/config/development.json
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-trading_db}
+      - API_KEY_ALPHA_VANTAGE=${API_KEY_ALPHA_VANTAGE}
+      - API_KEY_NEWS=${API_KEY_NEWS}
+      - LOG_LEVEL=INFO
+      - ENVIRONMENT=production
     volumes:
-      - ./config:/app/config
-      - ./data:/app/data
+      - ./config:/app/config:ro
       - ./logs:/app/logs
-      
+      - ./data:/app/data
+      - ./models:/app/models
+    networks:
+      - trading-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - python-engine
+    networks:
+      - trading-network
+
+  # Celery Worker for Background Tasks
+  celery-worker:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: celery -A src.workers.celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-trading_db}
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./models:/app/models
+    networks:
+      - trading-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+  # Celery Beat Scheduler
+  celery-beat:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: celery -A src.workers.celery_app beat --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+    networks:
+      - trading-network
+
+  # Prometheus for Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - trading-network
+
+  # Grafana for Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin_password_here}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
+    networks:
+      - trading-network
+
+  # Log aggregation with ELK Stack
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - trading-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - trading-network
+
 volumes:
   redis_data:
+    driver: local
   postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  trading-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

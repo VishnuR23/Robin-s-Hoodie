@@ -1,0 +1,140 @@
+[
+  {
+    "symbol": "AAPL",
+    "signal": "HOLD",
+    "confidence": 74.14511964155838,
+    "reason": "RSI and ML both suggest HOLD",
+    "rsi": 64.87316140224405,
+    "current_price": 213.88,
+    "rsi_signal": "HOLD",
+    "ml_signal": "HOLD",
+    "timestamp": "2025-07-25T22:21:59.869112",
+    "components": {
+      "rsi": {
+        "signal": "HOLD",
+        "confidence": 50,
+        "reason": "RSI (64.9) neutral"
+      },
+      "ml": {
+        "signal": "HOLD",
+        "confidence": 78.29023928311676,
+        "reason": "ML predicts sideways movement"
+      }
+    }
+  },
+  {
+    "symbol": "GOOGL",
+    "signal": "SELL",
+    "confidence": 72.0,
+    "reason": "RSI (SELL) overrides ML (HOLD)",
+    "rsi": 94.7243318528924,
+    "current_price": 193.18,
+    "rsi_signal": "SELL",
+    "ml_signal": "HOLD",
+    "timestamp": "2025-07-25T22:22:00.720396",
+    "components": {
+      "rsi": {
+        "signal": "SELL",
+        "confidence": 90,
+        "reason": "RSI (94.7) overbought"
+      },
+      "ml": {
+        "signal": "HOLD",
+        "confidence": 73.70216368371571,
+        "reason": "ML predicts sideways movement"
+      }
+    }
+  },
+  {
+    "symbol": "MSFT",
+    "signal": "HOLD",
+    "confidence": 67.14985542210748,
+    "reason": "ML (HOLD) overrides RSI (SELL)",
+    "rsi": 74.39326336900277,
+    "current_price": 513.71,
+    "rsi_signal": "SELL",
+    "ml_signal": "HOLD",
+    "timestamp": "2025-07-25T22:22:01.633168",
+    "components": {
+      "rsi": {
+        "signal": "SELL",
+        "confidence": 78.78652673800553,
+        "reason": "RSI (74.4) overbought"
+      },
+      "ml": {
+        "signal": "HOLD",
+        "confidence": 83.93731927763434,
+        "reason": "ML predicts sideways movement"
+      }
+    }
+  },
+  {
+    "symbol": "TSLA",
+    "signal": "HOLD",
+    "confidence": 60.20755467203025,
+    "reason": "RSI and ML both suggest HOLD",
+    "rsi": 59.5340078289254,
+    "current_price": 316.06,
+    "rsi_signal": "HOLD",
+    "ml_signal": "HOLD",
+    "timestamp": "2025-07-25T22:22:02.462221",
+    "components": {
+      "rsi": {
+        "signal": "HOLD",
+        "confidence": 50,
+        "reason": "RSI (59.5) neutral"
+      },
+      "ml": {
+        "signal": "HOLD",
+        "confidence": 50.4151093440605,
+        "reason": "ML predicts sideways movement"
+      }
+    }
+  },
+  {
+    "symbol": "NVDA",
+    "signal": "SELL",
+    "confidence": 63.102106840269954,
+    "reason": "RSI (SELL) overrides ML (BUY)",
+    "rsi": 74.43881677516872,
+    "current_price": 173.5,
+    "rsi_signal": "SELL",
+    "ml_signal": "BUY",
+    "timestamp": "2025-07-25T22:22:03.409081",
+    "components": {
+      "rsi": {
+        "signal": "SELL",
+        "confidence": 78.87763355033744,
+        "reason": "RSI (74.4) overbought"
+      },
+      "ml": {
+        "signal": "BUY",
+        "confidence": 48.1507076198819,
+        "reason": "ML predicts price increase"
+      }
+    }
+  },
+  {
+    "symbol": "AMZN",
+    "signal": "HOLD",
+    "confidence": 67.12279899898321,
+    "reason": "RSI and ML both suggest HOLD",
+    "rsi": 64.0763014977438,
+    "current_price": 231.44000244140625,
+    "rsi_signal": "HOLD",
+    "ml_signal": "HOLD",
+    "timestamp": "2025-07-25T22:22:04.463091",
+    "components": {
+      "rsi": {
+        "signal": "HOLD",
+        "confidence": 50,
+        "reason": "RSI (64.1) neutral"
+      },
+      "ml": {
+        "signal": "HOLD",
+        "confidence": 64.24559799796643,
+        "reason": "ML predicts sideways movement"
+      }
+    }
+  }
+]

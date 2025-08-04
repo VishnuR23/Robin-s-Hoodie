@@ -4,6 +4,11 @@ config/secrets.json
 *.env
 .env.*
 secrets/
+ssl/
+*.pem
+*.key
+*.crt
+*.p12
 
 # Build artifacts and binaries
 cpp/build/
@@ -44,6 +49,9 @@ python/models/
 *.joblib
 .coverage
 htmlcov/
+python/venv/
+venv/
+env/
 
 # Data files (usually too large for git)
 data/
@@ -56,6 +64,9 @@ data/
 *.json.gz
 market_data/
 historical_data/
+backups/
+*.sql
+*.rdb
 
 # Machine Learning
 models/
@@ -65,6 +76,8 @@ tensorboard_logs/
 *.pth
 *.h5
 *.onnx
+mlruns/
+wandb/
 
 # IDE and Editor files
 .vscode/settings.json
@@ -88,6 +101,7 @@ swift/build/
 swift/DerivedData/
 *.xcuserstate
 *.xcworkspace
+swift/TradingApp.xcodeproj/project.pbxproj.orig
 
 # Logs and temporary files
 logs/
@@ -95,9 +109,11 @@ logs/
 *.tmp
 temp/
 cache/
+deployment.log
 
 # Docker
 .docker/
+docker-compose.override.yml
 
 # Database files
 *.db
@@ -110,3 +126,80 @@ dump.rdb
 # OS generated files
 Thumbs.db
 .trash
+
+# Production deployment files
+nginx/
+prometheus/
+grafana/
+elasticsearch/
+
+# Node.js (if you add any JS tooling later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage reports
+coverage/
+*.cover
+.coverage.*
+
+# Testing
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Documentation builds
+docs/_build/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Temporary files created by editors
+.#*
+\#*#
+*.orig
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon?
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
